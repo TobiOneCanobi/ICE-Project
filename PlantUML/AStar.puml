@@ -1,0 +1,112 @@
+@startuml
+
+class Main{
++ JFrame window
++ JPanel buttonPanel
+
+}
+
+class Pathfinding{
+~ int maxCol
+~ int maxRow
+~ int tileSize
+~ int screenWidth
+~ int screenHeight
+~ Tile[][] tile
+~ Tile startTile
+~ Tile goalTile
+~ Tile currentTile
+~ ArrayList<Tile> openList
+~ ArrayList<Tile> checkedList
+~ ArrayList<Tile> allTiles
+~ boolean goalReached
+~ int step
+==
++ void generateRandom()
++ void setStartTile(int col, int row)
++ void setGoalTile(int col, int row)
++ void setSolidTile(int col, int row)
++ void setCostOnTiles()
++ void getCost()
++ void autoSearch()
++ void openTile(Tile tile)
++ void trackThePath()
+
+}
+
+class Tile{
++ Tile parent
++ int col
++ int row
++ int gCost
++ int hCost
++ int fCost
++ boolean start
++ boolean goal
++ boolean solid
++ boolean open
++ boolean checked
+==
++ void setAsStart()
++ void setAsGoal()
++ void setAsSolid()
++ void setAsOpen()
++ void setAsChecked()
++ void setAsPath()
++ void actionPerformed(ActionEvent e)
+}
+
+
+
+class ButtonHandler{
+Tile tile
+~ Pathfinding pf
+~ JButton placeStartTileButton
+~ JButton placeGoalTileButton
+~ JButton placeSolidTileButton
+~ JButton runButton
+~ JButton reset
+~ JButton showCost
+~ JButton randomizer
+~ JButton activeButton
+~ boolean costActive
+==
++ void actionPerformed(ActionEvent e)
+}
+
+class JPanel{
+}
+
+class JButton{
+}
+
+interface ActionListener
+
+JPanel <|-- Pathfinding
+
+JButton <|-- Tile
+
+ActionListener <|.. Tile
+
+JPanel <|-- ButtonHandler
+
+ActionListener <|.. ButtonHandler
+
+Main *-- ButtonHandler
+
+ButtonHandler o-- Pathfinding
+
+ButtonHandler o-- Tile
+
+
+
+
+
+
+
+
+
+
+
+
+@enduml
