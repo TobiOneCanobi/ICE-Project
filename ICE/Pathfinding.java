@@ -3,39 +3,39 @@ package ICE;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Pathfinding extends JPanel {
 
     //Screen settings
-    final int maxCol = 15;
-    final int maxRow = 10;
+    final int maxCol = 20;
+    final int maxRow = 15;
     final int tileSize = 70;
     final int screenWidth = tileSize * maxCol;
     final int screenHeight = tileSize * maxRow;
 
-    // tile
     Tile[][] tile = new Tile[maxCol][maxRow];
-    Tile startTile, goalTile, currentTile;
-    ArrayList<Tile>openList = new ArrayList<>();
-    ArrayList<Tile>checkedList = new ArrayList<>();
+    Tile startTile, goalTile, currentTile, normalTile;
+    ArrayList<Tile> openList = new ArrayList<>();
+    ArrayList<Tile> checkedList = new ArrayList<>();
+    ArrayList<Tile> allTiles = new ArrayList<>();
 
     Boolean goalReached = false;
     int step = 0;
 
     public Pathfinding() {
-        this.setPreferredSize(new Dimension(screenWidth,screenHeight));
+        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.black);
-        this.setLayout(new GridLayout(maxRow,maxCol));
-        this.addKeyListener(new KeyHandler(this));
-        this.setFocusable(true);
+        this.setLayout(new GridLayout(maxRow, maxCol));
 
         // place tile
         int col = 0;
         int row = 0;
 
-        while (col < maxCol && row < maxRow){
-            tile[col][row] = new Tile(col,row);
+        while (col < maxCol && row < maxRow) {
+            tile[col][row] = new Tile(col, row);
             this.add(tile[col][row]);
+            allTiles.add(tile[col][row]);
 
             col++;
             if (col == maxCol) {
@@ -43,51 +43,109 @@ public class Pathfinding extends JPanel {
                 row++;
             }
         }
-        // set start and goal tile
-        setStartTile(6,6);
-        setGoalTile(11,3);
-
-        //
-        setSolidTile(10,0);
-        setSolidTile(10,1);
-        setSolidTile(10,2);
-        setSolidTile(10,3);
-        setSolidTile(10,4);
-        setSolidTile(10,5);
-        setSolidTile(10,6);
-        setSolidTile(11,6);
-        setSolidTile(12,6);
-
-        setCostOnTiles();
     }
-    private void setStartTile(int col, int row){
+
+    public void generateRandom() {
+        Random rn = new Random();
+
+        Tile tileClass = new Tile(0, 0);
+        if (!tileClass.solid && !tileClass.checked && !tileClass.goal) {
+            int randomCol = rn.nextInt(maxCol);
+            int randomRow = rn.nextInt(maxRow);
+            setStartTile(randomCol, randomRow);
+        }
+        if (!tileClass.solid && !tileClass.checked && !tileClass.start) {
+            int randomCol = rn.nextInt(maxCol);
+            int randomRow = rn.nextInt(maxRow);
+            setGoalTile(randomCol, randomRow);
+        }
+        // generate blocks
+        for (int i = 0; i < (maxCol*maxRow)/3; i++) {
+            int randomColForLoop = rn.nextInt(maxCol);
+            int randomRowForLoop = rn.nextInt(maxRow);
+            if (!tileClass.goal && !tileClass.start) {
+                setSolidTile(randomColForLoop, randomRowForLoop);
+            }
+        }
+    }
+
+    public void setStartTile(int col, int row) {
         tile[col][row].setAsStart();
         startTile = tile[col][row];
         currentTile = startTile;
     }
-    private void setGoalTile(int col, int row){
+
+    public void checkStart() {
+        for (Tile tile : allTiles) {
+            if (tile == startTile) {
+                tile.resetTile();
+            }
+        }
+    }
+
+    public void setGoalTile(int col, int row) {
         tile[col][row].setAsGoal();
         goalTile = tile[col][row];
     }
-    private void setSolidTile(int col, int row) {
-        tile[col][row].setAsSolid();
+
+    public void checkGoal() {
+        for (Tile tile : allTiles) {
+            if (tile == goalTile) {
+                tile.resetTile();
+            }
+        }
     }
 
-    private void setCostOnTiles(){
+    private void setSolidTile(int col, int row) {
+        if (!tile[col][row].start && !tile[col][row].goal) {
+            tile[col][row].setAsSolid();
+        }
+    }
+
+    public void placeOrRemoveSolid(int col, int row) {
+        if (tile[col][row].isSolid() == true) {
+            tile[col][row].resetTile();
+        } else if (tile[col][row].isSolid() == false) {
+            tile[col][row].setAsSolid();
+        }
+    }
+
+    public void reset() {
+        for (Tile tile : allTiles) {
+            tile.resetTile();
+            goalReached = false;
+            startTile = normalTile;
+            goalTile = normalTile;
+            currentTile = normalTile;
+            openList.clear();
+            checkedList.clear();
+        }
+    }
+
+    public void setCostOnTiles() {
 
         int col = 0;
         int row = 0;
 
-        while(col < maxCol && row < maxRow){
-            getcost(tile[col][row]);
+        while (col < maxCol && row < maxRow) {
+            getCost(tile[col][row]);
             col++;
-            if(col == maxCol){
+            if (col == maxCol) {
                 col = 0;
                 row++;
             }
         }
     }
-    private void getcost(Tile tile) {
+
+    public void updateTileCosts() {
+        for (Tile[] tiles : tile) {
+            for (Tile t : tiles) {
+                getCost(t);
+            }
+        }
+    }
+
+    public void getCost(Tile tile) {
         // get g Cost (the distance from the start tile)
         int xDistance = Math.abs(tile.col - startTile.col);
         int yDistance = Math.abs(tile.row - startTile.row);
@@ -102,129 +160,103 @@ public class Pathfinding extends JPanel {
         tile.fCost = tile.gCost + tile.hCost;
 
         // display the cost on tile
-        if (tile != startTile && tile != goalTile) {
-            tile.setText("<html>F:" + tile.fCost + "<br>G:" + tile.gCost + "</html>");
-        }
-    }
-    public void search(){
-        if (goalReached == false && step <300) {
-            int col = currentTile.col;
-            int row = currentTile.row;
-
-            currentTile.setAsChecked();
-            checkedList.add(currentTile);
-            openList.remove(currentTile);
-            //open the up tile
-            if (row - 1 >= 0) {
-                openTile(tile[col][row-1]);
+        if (ButtonHandler.costActive == true) {
+            if (tile != startTile && tile != goalTile) {
+                tile.setText("<html>F:" + tile.fCost + "<br>G:" + tile.gCost + "</html>");
             }
-            //open the left tile
-            if (col -1 >=0){
-                openTile(tile[col-1][row]);
-            }
-            //open the down tile
-            if (row +1 < maxRow) {
-                openTile(tile[col][row + 1]);
-            }
-            //open the right tile
-            if (col +1 < maxCol) {
-                openTile(tile[col + 1][row]);
-            }
-            //find the best tile
-            int bestTileIndex = 0;
-            int bestTileFCost = 999;
-
-            for (int i = 0; i < openList.size(); i++){
-                if(openList.get(i).fCost < bestTileFCost){
-                    bestTileIndex = i;
-                    bestTileFCost = openList.get(i).fCost;
-                }
-                //if f cost is equal check the g cost
-                else if (openList.get(i).fCost == bestTileFCost) {
-                    if (openList.get(i).gCost < openList.get(bestTileIndex).gCost){
-                        bestTileIndex = i;
-                    }
-                }
-            }
-            // then the loop is done we will have the best tile for our next step
-            currentTile = openList.get(bestTileIndex);
-            if (currentTile == goalTile){
-                goalReached = true;
+            // remove the cost on tile
+        } else if (ButtonHandler.costActive == false) {
+            if (tile != startTile && tile != goalTile) {
+                tile.setText("");
             }
         }
-        step++;
     }
+
     public void autoSearch() {
+        new Thread(() -> {
+            while (goalReached == false && step < 300) {
 
-        while (goalReached == false && step < 300) {
+                int col = currentTile.col;
+                int row = currentTile.row;
 
-            int col = currentTile.col;
-            int row = currentTile.row;
-
-            currentTile.setAsChecked();
-            checkedList.add(currentTile);
-            openList.remove(currentTile);
-            //open the up tile
-            if (row - 1 >= 0) {
-                openTile(tile[col][row-1]);
-            }
-            //open the left tile
-            if (col -1 >=0){
-                openTile(tile[col-1][row]);
-            }
-            //open the down tile
-            if (row +1 < maxRow) {
-                openTile(tile[col][row + 1]);
-            }
-            //open the right tile
-            if (col +1 < maxCol) {
-                openTile(tile[col + 1][row]);
-            }
-            //find the best tile
-            int bestTileIndex = 0;
-            int bestTileFCost = 999;
-
-            for (int i = 0; i < openList.size(); i++){
-
-                if(openList.get(i).fCost < bestTileFCost){
-                    bestTileIndex = i;
-                    bestTileFCost = openList.get(i).fCost;
+                currentTile.setAsChecked();
+                checkedList.add(currentTile);
+                openList.remove(currentTile);
+                //open the up tile
+                if (row - 1 >= 0) {
+                    openTile(tile[col][row - 1]);
                 }
-                //if f cost is equal check the g cost
-                else if (openList.get(i).fCost == bestTileFCost) {
-                    if (openList.get(i).gCost < openList.get(bestTileIndex).gCost){
+                //open the left tile
+                if (col - 1 >= 0) {
+                    openTile(tile[col - 1][row]);
+                }
+                //open the down tile
+                if (row + 1 < maxRow) {
+                    openTile(tile[col][row + 1]);
+                }
+                //open the right tile
+                if (col + 1 < maxCol) {
+                    openTile(tile[col + 1][row]);
+                }
+                //find the best tile
+                int bestTileIndex = 0;
+                int bestTileFCost = 999;
+
+                for (int i = 0; i < openList.size(); i++) {
+
+                    if (openList.get(i).fCost < bestTileFCost) {
                         bestTileIndex = i;
+                        bestTileFCost = openList.get(i).fCost;
+                    }
+                    //if f cost is equal check the g cost
+                    else if (openList.get(i).fCost == bestTileFCost) {
+                        if (openList.get(i).gCost < openList.get(bestTileIndex).gCost) {
+                            bestTileIndex = i;
+                        }
                     }
                 }
+                // then the loop is done we will have the best tile for our next step
+                currentTile = openList.get(bestTileIndex);
+                if (currentTile == goalTile) {
+                    goalReached = true;
+                    trackThePath();
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            // then the loop is done we will have the best tile for our next step
-            currentTile = openList.get(bestTileIndex);
-            if (currentTile == goalTile){
-                goalReached = true;
-                trackThePath();
-            }
-        }
-        step++;
+            step++;
+        }).start();
     }
-    private void openTile(Tile tile){
-        if (tile.open == false && tile.checked == false && tile.solid == false){
 
+    public void openTile(Tile tile) {
+        if (tile.open == false && tile.checked == false && tile.solid == false) {
 
             tile.setAsOpen();
             tile.parent = currentTile;
             openList.add(tile);
         }
     }
-    private void trackThePath(){
 
-        Tile current = goalTile;
+    private void trackThePath() {
+        new Thread(() -> {
+            Tile current = goalTile;
 
-        while (current != startTile) {
-            current = current.parent;
+            while (current != startTile) {
+                current = current.parent;
 
-            if (current != startTile) {
-                current.setAsPath();
+                if (current != startTile) {
+                    current.setAsPath();
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+
+        }).start();
     }
 }
