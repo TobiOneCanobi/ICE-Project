@@ -81,6 +81,8 @@ public class ButtonHandler extends JPanel implements ActionListener {
         if (activeButton == reset) {
             setChatMessage("Resetting");
             pf.reset();
+            costActive = false;
+
         }
         if (activeButton == showCost) {
             if (costActive == false) {
@@ -95,6 +97,7 @@ public class ButtonHandler extends JPanel implements ActionListener {
         }
         if (activeButton == randomizer) {
             setChatMessage("Generating a randomized map");
+            pf.reset();
             pf.generateRandom();
         }
     }

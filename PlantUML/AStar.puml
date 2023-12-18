@@ -16,6 +16,7 @@ class Pathfinding{
 ~ Tile startTile
 ~ Tile goalTile
 ~ Tile currentTile
+~ Tile normalTile
 ~ ArrayList<Tile> openList
 ~ ArrayList<Tile> checkedList
 ~ ArrayList<Tile> allTiles
@@ -24,9 +25,14 @@ class Pathfinding{
 ==
 + void generateRandom()
 + void setStartTile(int col, int row)
++ void checkStart()
 + void setGoalTile(int col, int row)
++ void checkGoal
 + void setSolidTile(int col, int row)
++ void placeOrRemoveSolid(int col, int row)
++ void reset()
 + void setCostOnTiles()
++ void updateTileCosts()
 + void getCost()
 + void autoSearch()
 + void openTile(Tile tile)
@@ -49,10 +55,12 @@ class Tile{
 ==
 + void setAsStart()
 + void setAsGoal()
++ void resetTile()
 + void setAsSolid()
 + void setAsOpen()
 + void setAsChecked()
 + void setAsPath()
++ void isSolid()
 + void actionPerformed(ActionEvent e)
 }
 
@@ -70,7 +78,9 @@ Tile tile
 ~ JButton randomizer
 ~ JButton activeButton
 ~ boolean costActive
+~ JLabel chatLabel
 ==
++ void setChatMessage(String message)
 + void actionPerformed(ActionEvent e)
 }
 
